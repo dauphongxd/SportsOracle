@@ -167,6 +167,7 @@ def predict_match():
         ### OUTPUT FORMAT (JSON)
         Return a JSON object. 
         CRITICAL: The "reasoning" field must be a long, formatted string using Markdown to separate the layers.
+        CRITICAL: Your "predicted_outcome" and "reasoning" MUST match your probabilities. If you say Draw is most likely, 'draw_probability' MUST be the highest number.
 
         Example JSON Structure:
         {
