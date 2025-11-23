@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>My Bets - Sports Oracle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        .wallet-banner {
+            background: linear-gradient(45deg, #10b981, #059669);
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+        .balance-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
+        .balance-amount { font-size: 3rem; font-weight: 800; margin-top: 0.5rem; }
+
+        .bets-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        .bets-table th { text-align: left; color: var(--text-secondary); padding: 1rem; border-bottom: 1px solid var(--border-color); }
+        .bets-table td { padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
+        .status-PENDING { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+        .status-WON { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+        .status-LOST { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+
+        .nav-back { color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
+        .nav-back:hover { color: var(--accent-color); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="nav-back">← Back to Oracle</a>
+
+        <div class="wallet-banner">
+            <div class="balance-label">Current Bankroll</div>
+            <div class="balance-amount">$<span id="balance">---</span></div>
+        </div>
+
+        <h2 style="margin-bottom: 1rem;">Active Bets</h2>
+        <div class="prediction-card" style="display: block; padding: 0; overflow: hidden;">
+            <table class="bets-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Match</th>
+                        <th>Selection</th>
+                        <th>Odds</th>
+                        <th>Stake</th>
+                        <th>Return</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="active-bets-body"></tbody>
+            </table>
+        </div>
+
+        <h2 style="margin-top: 3rem; margin-bottom: 1rem;">Betting History</h2>
+        <div class="prediction-card" style="display: block; padding: 0; overflow: hidden;">
+            <table class="bets-table">
+                <tbody id="history-bets-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function loadData() {
+            // 1. Get Balance
+            const wRes = await fetch('/api/wallet');
+            const wData = await wRes.json();
+            document.getElementById('balance').textContent = wData.balance.toFixed(2);
+
+            // 2. Get Bets
+            const bRes = await fetch('/api/bets');
+            const bets = await bRes.json();
+
+            const activeBody = document.getElementById('active-bets-body');
+            const historyBody = document.getElementById('history-bets-body');
+            activeBody.innerHTML = '';
+            historyBody.innerHTML = '';
+
+            bets.forEach(bet => {
+                const row = `
+                    <tr>
+                        <td>${bet.match_date}</td>
+                        <td>${bet.match}</td>
+                        <td style="font-weight: 700">${bet.bet_type}</td>
+                        <td>${bet.odds.toFixed(2)}</td>
+                        <td>$${bet.stake.toFixed(2)}</td>
+                        <td>$${bet.potential_return.toFixed(2)}</td>
+                        <td><span class="status-badge status-${bet.status}">${bet.status}</span></td>
+                    </tr>
+                `;
+
+                if (bet.status === 'PENDING') {
+                    activeBody.innerHTML += row;
+                } else {
+                    historyBody.innerHTML += row;
+                }
+            });
+
+            if(activeBody.innerHTML === '') activeBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No active bets</td></tr>';
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
+</body>
+</html>

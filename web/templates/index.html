@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sports Oracle</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Sports Oracle</h1>
+            <p class="subtitle">AI-Powered Betting Intelligence</p>
+
+            <div style="margin-top: 1rem;">
+                <a href="/my-bets" style="color: var(--accent-color); text-decoration: none; font-weight: 600; border: 1px solid var(--border-color); padding: 0.5rem 1rem; border-radius: 99px;">
+                    💰 My Bankroll
+                </a>
+            </div>
+        </header>
+
+
+        <div class="search-section">
+            <div class="input-group">
+                <div class="input-wrapper">
+                    <label>Home Team</label>
+                    <input type="text" id="home-team" placeholder="e.g. Liverpool" autocomplete="off">
+                    <div id="home-suggestions" class="suggestions"></div>
+                </div>
+                <div class="input-wrapper">
+                    <label>Away Team</label>
+                    <input type="text" id="away-team" placeholder="e.g. Arsenal" autocomplete="off">
+                    <div id="away-suggestions" class="suggestions"></div>
+                </div>
+            </div>
+
+            <button id="predict-btn" class="btn-primary">
+                <span id="btn-text">Analyze Matchup</span>
+                <div id="loading-spinner" class="spinner"></div>
+            </button>
+            <div id="error-msg" style="display: none;"></div>
+        </div>
+
+        <div id="result-card" class="prediction-card">
+
+            <!-- NEW: Context Bar for Derby Alerts -->
+            <div id="derby-alert" class="derby-banner" style="display: none;"></div>
+
+            <div class="matchup-header">
+                <div class="team-display">
+                    <img id="home-logo" src="" alt="" class="team-logo-large">
+                    <span id="home-name" class="team-name">Home</span>
+                    <span id="home-formation" class="formation-badge">4-3-3</span>
+                    <!-- NEW: Stakes Badge -->
+                    <span id="home-stakes" class="stakes-badge"></span>
+                </div>
+                <span class="vs">VS</span>
+                <div class="team-display">
+                    <img id="away-logo" src="" alt="" class="team-logo-large">
+                    <span id="away-name" class="team-name">Away</span>
+                    <span id="away-formation" class="formation-badge">4-2-3-1</span>
+                    <!-- NEW: Stakes Badge -->
+                    <span id="away-stakes" class="stakes-badge"></span>
+                </div>
+            </div>
+
+            <!-- NEW: Manager Battle Section -->
+            <div class="manager-section">
+                <div class="manager-card home-mgr">
+                    <span class="mgr-label">Home Manager</span>
+                    <span id="home-manager" class="mgr-name">-</span>
+                </div>
+                <div class="manager-card away-mgr">
+                    <span class="mgr-label">Away Manager</span>
+                    <span id="away-manager" class="mgr-name">-</span>
+                </div>
+            </div>
+            <div class="intel-grid">
+                <!-- Home Intel -->
+                <div class="intel-card">
+                    <div class="intel-header">
+                        <span class="intel-team-label">HOME INTEL</span>
+                    </div>
+                    <div class="intel-row">
+                        <span class="icon">⭐</span>
+                        <span id="home-key-player" class="intel-val">-</span>
+                    </div>
+                    <div class="intel-row">
+                        <span class="icon">🟨</span>
+                        <span id="home-discipline" class="intel-val">-</span>
+                    </div>
+                </div>
+
+                <!-- Away Intel -->
+                <div class="intel-card">
+                    <div class="intel-header">
+                        <span class="intel-team-label">AWAY INTEL</span>
+                    </div>
+                    <div class="intel-row">
+                        <span class="icon">⭐</span>
+                        <span id="away-key-player" class="intel-val">-</span>
+                    </div>
+                    <div class="intel-row">
+                        <span class="icon">🟨</span>
+                        <span id="away-discipline" class="intel-val">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span id="home-win-label">Home Win</span>
+                        <span id="home-win-val">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="home-win-bar" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span id="draw-label">Draw</span>
+                        <span id="draw-val">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="draw-bar" class="progress-fill" style="width: 0%; background-color: #a1a1aa;"></div>
+                    </div>
+                </div>
+                <div class="stat-row">
+                    <div class="stat-label">
+                        <span id="away-win-label">Away Win</span>
+                        <span id="away-win-val">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div id="away-win-bar" class="progress-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-bottom: 1.5rem;">
+                <div id="risk-badge" class="risk-badge">Risk Rating: 0/10</div>
+            </div>
+
+            <div class="betting-advice">
+                <div class="advice-title">💡 AI Recommendation</div>
+                <div id="advice-text" class="advice-text"></div>
+            </div>
+
+            <div class="betting-advice" style="margin-top: 1rem;">
+                <div class="advice-title">🧠 Coach's Logic (5-Layer Analysis)</div>
+                <div id="reasoning-text" class="advice-text" style="font-size: 0.9rem; color: var(--text-secondary);">
+                </div>
+            </div>
+
+            <div class="bet-buttons">
+                <button id="btn-home" class="btn-bet">
+                    <span class="bet-label">HOME</span>
+                    <span class="bet-odds">-</span>
+                </button>
+                <button id="btn-draw" class="btn-bet">
+                    <span class="bet-label">DRAW</span>
+                    <span class="bet-odds">-</span>
+                </button>
+                <button id="btn-away" class="btn-bet">
+                    <span class="bet-label">AWAY</span>
+                    <span class="bet-odds">-</span>
+                </button>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h2>Recent Evaluations</h2>
+            <div id="history-grid" class="history-grid">
+                <!-- History items will be injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+
+</html>
