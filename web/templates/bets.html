@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>My Bets - Sports Oracle</title>
@@ -14,22 +15,86 @@
             margin-bottom: 2rem;
             box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
         }
-        .balance-label { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.9; }
-        .balance-amount { font-size: 3rem; font-weight: 800; margin-top: 0.5rem; }
 
-        .bets-table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
-        .bets-table th { text-align: left; color: var(--text-secondary); padding: 1rem; border-bottom: 1px solid var(--border-color); }
-        .bets-table td { padding: 1rem; border-bottom: 1px solid var(--border-color); color: var(--text-primary); }
+        .balance-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+        }
 
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.8rem; font-weight: 600; }
-        .status-PENDING { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
-        .status-WON { background: rgba(16, 185, 129, 0.2); color: #10b981; }
-        .status-LOST { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .balance-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+        }
 
-        .nav-back { color: var(--text-secondary); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
-        .nav-back:hover { color: var(--accent-color); }
+        .bets-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .bets-table th {
+            text-align: left;
+            color: var(--text-secondary);
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bets-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-PENDING {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .status-WON {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .status-LOST {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .nav-back {
+            color: var(--text-secondary);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .nav-back:hover {
+            color: var(--accent-color);
+        }
+
+        .view-eval-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .view-eval-link:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <a href="/" class="nav-back">← Back to Oracle</a>
@@ -51,6 +116,7 @@
                         <th>Stake</th>
                         <th>Return</th>
                         <th>Status</th>
+                        <th>Eval</th>
                     </tr>
                 </thead>
                 <tbody id="active-bets-body"></tbody>
@@ -60,6 +126,19 @@
         <h2 style="margin-top: 3rem; margin-bottom: 1rem;">Betting History</h2>
         <div class="prediction-card" style="display: block; padding: 0; overflow: hidden;">
             <table class="bets-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Match</th>
+                        <th>Result</th>
+                        <th>Selection</th>
+                        <th>Odds</th>
+                        <th>Stake</th>
+                        <th>Return</th>
+                        <th>Status</th>
+                        <th>Evaluation</th>
+                    </tr>
+                </thead>
                 <tbody id="history-bets-body"></tbody>
             </table>
         </div>
@@ -82,29 +161,48 @@
             historyBody.innerHTML = '';
 
             bets.forEach(bet => {
-                const row = `
-                    <tr>
-                        <td>${bet.match_date}</td>
-                        <td>${bet.match}</td>
-                        <td style="font-weight: 700">${bet.bet_type}</td>
-                        <td>${bet.odds.toFixed(2)}</td>
-                        <td>$${bet.stake.toFixed(2)}</td>
-                        <td>$${bet.potential_return.toFixed(2)}</td>
-                        <td><span class="status-badge status-${bet.status}">${bet.status}</span></td>
-                    </tr>
-                `;
+                const evalLink = bet.prediction_id
+                    ? `<a href="/?prediction_id=${bet.prediction_id}" class="view-eval-link">View</a>`
+                    : '-';
 
                 if (bet.status === 'PENDING') {
+                    const row = `
+                        <tr>
+                            <td>${bet.match_date}</td>
+                            <td>${bet.match}</td>
+                            <td style="font-weight: 700">${bet.bet_type}</td>
+                            <td>${bet.odds.toFixed(2)}</td>
+                            <td>$${bet.stake.toFixed(2)}</td>
+                            <td>$${bet.potential_return.toFixed(2)}</td>
+                            <td><span class="status-badge status-${bet.status}">${bet.status}</span></td>
+                            <td>${evalLink}</td>
+                        </tr>
+                    `;
                     activeBody.innerHTML += row;
                 } else {
+                    const row = `
+                        <tr>
+                            <td>${bet.match_date}</td>
+                            <td>${bet.match}</td>
+                            <td style="font-weight: 600; color: var(--accent-color);">${bet.actual_result || '-'}</td>
+                            <td style="font-weight: 700">${bet.bet_type}</td>
+                            <td>${bet.odds.toFixed(2)}</td>
+                            <td>$${bet.stake.toFixed(2)}</td>
+                            <td>$${bet.potential_return.toFixed(2)}</td>
+                            <td><span class="status-badge status-${bet.status}">${bet.status}</span></td>
+                            <td>${evalLink}</td>
+                        </tr>
+                    `;
                     historyBody.innerHTML += row;
                 }
             });
 
-            if(activeBody.innerHTML === '') activeBody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No active bets</td></tr>';
+            if (activeBody.innerHTML === '') activeBody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 2rem;">No active bets</td></tr>';
+            if (historyBody.innerHTML === '') historyBody.innerHTML = '<tr><td colspan="9" style="text-align:center; padding: 2rem;">No betting history</td></tr>';
         }
 
         document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>
+
 </html>

@@ -296,6 +296,11 @@ def get_bets():
         match = session.query(Match).get(bet.match_id)
         home_team = session.query(Team).get(match.team_home_id)
         away_team = session.query(Team).get(match.team_away_id)
+        
+        # Find associated prediction
+        prediction = session.query(Prediction).filter_by(match_id=match.id).first()
+        prediction_id = prediction.id if prediction else None
+        
         data.append({
             "id": bet.id, "match": f"{home_team.name} vs {away_team.name}",
             "match_date": match.date.strftime("%Y-%m-%d %H:%M"),
@@ -303,7 +308,8 @@ def get_bets():
             "odds": bet.odds, "potential_return": bet.potential_return,
             "status": bet.status, "placed_at": bet.placed_at.strftime("%Y-%m-%d %H:%M"),
             "resolved_at": bet.resolved_at.strftime("%Y-%m-%d %H:%M") if bet.resolved_at else None,
-            "actual_result": bet.actual_result
+            "actual_result": bet.actual_result,
+            "prediction_id": prediction_id
         })
     session.close()
     return jsonify(data)
@@ -354,18 +360,6 @@ def place_bet():
         return jsonify({"error": str(e)}), 500
     finally:
         session.close()
-
-@app.route('/api/wallet', methods=['GET'])
-def get_wallet():
-    session = Session()
-    wallet = session.query(Wallet).first()
-    if not wallet:
-        wallet = Wallet()
-        session.add(wallet)
-        session.commit()
-    balance = wallet.balance
-    session.close()
-    return jsonify({"balance": balance})
 
 
 @app.route('/api/predictions', methods=['GET'])
@@ -437,119 +431,6 @@ def search_teams():
     session.close()
     return jsonify(data)
 
-
-            confidence_score=confidence, reasoning=reasoning,
-            home_win_probability=prob_home, away_win_probability=prob_away,
-            draw_probability=prob_draw, risk_rating=risk_rating,
-            betting_advice=betting_advice, expected_value_home=ev_home,
-            expected_value_away=ev_away, expected_value_draw=ev_draw,
-
-            # --- SAVING ALL PHASES ---
-            home_manager=home_manager, away_manager=away_manager,
-            home_context=home_context.get('context'), away_context=away_context.get('context'),
-            derby_alert=derby_text if derby_data else None,
-            home_formation=home_formation, away_formation=away_formation,
-            home_deep_stats=home_deep, away_deep_stats=away_deep,
-            home_key_players=home_players, away_key_players=away_players
-        )
-        session.add(new_pred)
-        session.commit()
-
-        return jsonify({
-            "match_id": match.id, "home_team": home_team.name, "away_team": away_team.name,
-            "home_logo": home_team.logo_url, "away_logo": away_team.logo_url,
-            "date": match.date.strftime("%Y-%m-%d %H:%M"),
-            "home_win_probability": prob_home, "draw_probability": prob_draw,
-            "away_win_probability": prob_away, "confidence": confidence,
-            "reasoning": reasoning, "risk_rating": risk_rating,
-            "betting_advice": betting_advice, "ev_home": ev_home, "ev_draw": ev_draw, "ev_away": ev_away,
-            "odds": odds_data,
-            "home_manager": home_manager, "away_manager": away_manager,
-            "home_context": home_context.get('context'), "away_context": away_context.get('context'),
-            "derby_alert": derby_text if derby_data else None,
-            "home_formation": home_formation, "away_formation": away_formation,
-            "home_key_players": home_players, "away_key_players": away_players,
-            "home_deep_stats": home_deep, "away_deep_stats": away_deep,
-            "cached": False
-        })
-
-    except Exception as e:
-        session.rollback()
-        import traceback
-        traceback.print_exc()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
-
-
-@app.route('/api/bets', methods=['GET'])
-def get_bets():
-    session = Session()
-    bets = session.query(Bet).order_by(Bet.placed_at.desc()).all()
-    data = []
-    for bet in bets:
-        match = session.query(Match).get(bet.match_id)
-        home_team = session.query(Team).get(match.team_home_id)
-        away_team = session.query(Team).get(match.team_away_id)
-        data.append({
-            "id": bet.id, "match": f"{home_team.name} vs {away_team.name}",
-            "match_date": match.date.strftime("%Y-%m-%d %H:%M"),
-            "bet_type": bet.bet_type, "stake": bet.stake_amount,
-            "odds": bet.odds, "potential_return": bet.potential_return,
-            "status": bet.status, "placed_at": bet.placed_at.strftime("%Y-%m-%d %H:%M"),
-            "resolved_at": bet.resolved_at.strftime("%Y-%m-%d %H:%M") if bet.resolved_at else None,
-            "actual_result": bet.actual_result
-        })
-    session.close()
-    return jsonify(data)
-
-
-@app.route('/api/bets', methods=['POST'])
-def place_bet():
-    data = request.json
-    session = Session()
-    try:
-        match_id = data.get('match_id')
-        bet_type = data.get('bet_type')
-        stake = float(data.get('stake_amount', 100))
-        odds = data.get('odds')
-
-        # 1. Check Wallet
-        wallet = session.query(Wallet).first()
-        if not wallet:
-            wallet = Wallet(balance=10000.0)
-            session.add(wallet)
-
-        if wallet.balance < stake:
-            return jsonify({"error": f"Insufficient funds. Balance: ${wallet.balance:.2f}"}), 400
-
-        # 2. Deduct Stake
-        wallet.balance -= stake
-
-        # 3. Create Bet
-        potential_return = stake * odds
-        new_bet = Bet(
-            match_id=match_id,
-            bet_type=bet_type,
-            stake_amount=stake,
-            odds=odds,
-            potential_return=potential_return,
-            status="PENDING",
-            placed_at=datetime.utcnow()
-        )
-        session.add(new_bet)
-        session.commit()
-
-        return jsonify({
-            "message": "Bet placed!",
-            "new_balance": wallet.balance
-        })
-    except Exception as e:
-        session.rollback()
-        return jsonify({"error": str(e)}), 500
-    finally:
-        session.close()
-
 @app.route('/api/wallet', methods=['GET'])
 def get_wallet():
     session = Session()
@@ -563,74 +444,7 @@ def get_wallet():
     return jsonify({"balance": balance})
 
 
-@app.route('/api/predictions', methods=['GET'])
-def get_predictions():
-    session = Session()
-    predictions = session.query(Prediction).all()
-    data = []
-    for p in predictions:
-        match = session.query(Match).get(p.match_id)
-        home_team = session.query(Team).get(match.team_home_id)
-        away_team = session.query(Team).get(match.team_away_id)
-        winner_name = "Draw"
-        if p.predicted_winner_id:
-            winner_team = session.query(Team).get(p.predicted_winner_id)
-            winner_name = winner_team.name
 
-        # Fetch odds
-        match_odds = session.query(MatchOdds).filter_by(match_id=match.id).first()
-        odds_data = None
-        if match_odds:
-            odds_data = {
-                "home_win": match_odds.home_win_odds,
-                "draw": match_odds.draw_odds,
-                "away_win": match_odds.away_win_odds
-            }
-
-        data.append({
-            "id": p.id,
-            "match_id": match.id,
-            "match": f"{home_team.name} vs {away_team.name}",
-            "date": match.date.strftime("%Y-%m-%d"),
-            "winner": winner_name,
-            "confidence": p.confidence_score,
-            "reasoning": p.reasoning,
-            "draw_probability": p.draw_probability,
-            "risk_rating": p.risk_rating,
-            "betting_advice": p.betting_advice,
-            "home_team": home_team.name,
-            "away_team": away_team.name,
-            "home_logo": home_team.logo_url,
-            "away_logo": away_team.logo_url,
-            "home_win_probability": p.home_win_probability,
-            "away_win_probability": p.away_win_probability,
-            "odds": odds_data,
-
-            # --- ADDING THE MISSING PERSISTED DATA ---
-            "home_manager": p.home_manager,
-            "away_manager": p.away_manager,
-            "home_context": p.home_context,
-            "away_context": p.away_context,
-            "derby_alert": p.derby_alert,
-            "home_formation": p.home_formation,
-            "away_formation": p.away_formation,
-            "home_key_players": p.home_key_players,
-            "away_key_players": p.away_key_players,
-            "home_deep_stats": p.home_deep_stats,
-            "away_deep_stats": p.away_deep_stats
-        })
-    session.close()
-    return jsonify(data)
-
-
-@app.route('/api/teams/search', methods=['GET'])
-def search_teams():
-    query = request.args.get('q', '')
-    session = Session()
-    teams = session.query(Team).filter(Team.name.ilike(f'%{query}%')).limit(10).all()
-    data = [{"id": t.id, "api_id": t.api_id, "name": t.name, "logo_url": t.logo_url} for t in teams]
-    session.close()
-    return jsonify(data)
 
 
 @app.route('/')
