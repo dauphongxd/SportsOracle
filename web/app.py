@@ -162,7 +162,7 @@ def predict_match():
         2. **Key Duels**: Look at Key Players (Top Scorer vs Defense).
         3. **Discipline & Volatility**: Check Deep Stats (Red Cards). High aggression + Derby = Chaos.
         4. **Context**: Motivation (Title vs Relegation) & Manager Pressure.
-        5. **Value Analysis**: Compare your calculated probability vs the implied odds.
+        5. **The Verdict**: Synthesize all factors to predict the winner based PURELY on performance and news. Do NOT consider odds.
 
         ### OUTPUT FORMAT (JSON)
         Return a JSON object. 
@@ -177,7 +177,7 @@ def predict_match():
             "predicted_outcome": "Home",
             "confidence": 0.75,
             "risk_rating": 6,
-            "reasoning": "### 1. Tactical Matchup\n[Detailed analysis of formations...]\n\n### 2. Key Duels & Stats\n[Analysis of players and cards...]\n\n### 3. Context & Psychology\n[Analysis of motivation...]\n\n### 4. The Verdict\n[Final summary of why Home wins...]"
+            "reasoning": "### 1. Tactical Matchup\n[Detailed analysis of formations...]\n\n### 2. Key Duels\n[Analysis of players...]\n\n### 3. Discipline & Volatility\n[Analysis of cards and aggression...]\n\n### 4. Context & Psychology\n[Analysis of motivation...]\n\n### 5. The Verdict\n[Final summary of why Home wins...]"
         }
         """
 
