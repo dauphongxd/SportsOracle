@@ -1,3 +1,5 @@
+![Sports Oracle Logo](assets/logo.svg)
+
 # Sports Oracle
 
 Sports Oracle is an advanced AI-powered sports prediction platform designed to analyze football (soccer) matches with professional depth. It combines statistical data, live odds, team news, and contextual factors to generate high-confidence match predictions and betting advice.
@@ -20,6 +22,16 @@ Sports Oracle is an advanced AI-powered sports prediction platform designed to a
     *   **Risk Rating**: Assigns a risk score (1-10) to every prediction.
     *   **Virtual Wallet**: A simulated betting environment to test strategies without real financial risk.
 *   **News Integration**: Fetches real-time team news to catch late-breaking developments affecting match outcomes.
+
+## 📸 Examples
+
+### 1. Match Prediction Dashboard
+The main interface showing live odds, win probabilities, and the AI's confidence score.
+![Match Prediction UI](assets/prediction.png)
+
+### 2. Deep Reasoning Analysis
+A look at the "5-Layer Logic" where the AI breaks down tactics, key duels, and psychological factors.
+![AI Reasoning Breakdown](assets/reasoning.png)
 
 ## 🛠️ Tech Stack
 
